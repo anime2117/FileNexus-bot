@@ -1,0 +1,13 @@
+{
+  "name": "filenexus_bot",
+  "version": "1.0.0",
+  "description": "Telegram File Share and Resell Bot",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "node-telegram-bot-api": "^0.66.0",
+    "firebase": "^10.12.0"
+  }
+}
