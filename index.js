@@ -6,27 +6,19 @@ const app = express();
 const fs = require('fs'); // ফাইল চেক করার জন্য যুক্ত করা হলো
 
 // ১. ফায়ারবেস সেটআপ 
-// Render-এ Secret File-এর নাম যদি 'firebase-key.json' হয়ে থাকে, তবে নিচের পাথটি একদম সঠিক।
-const serviceAccountPath = '/opt/render/project/src/firebase-key.json'; 
+// Render-এর নিয়ম অনুযায়ী Secret File-এর পাথ /etc/secrets/ দিয়ে শুরু হয়
+const serviceAccountPath = '/etc/secrets/apki-d2597-firebase-adminsdk-fbsvc-b01dc61c66.json'; 
 
 try {
-  if (fs.existsSync(serviceAccountPath)) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccountPath),
-      databaseURL: "https://apki-d2597-default-rtdb.firebaseio.com/" 
-    });
-    console.log("🎉 Firebase সফলভাবে কানেক্ট হয়েছে!");
-  } else {
-    // যদি ওই পাথে না পায়, তবে কারেন্ট ডিরেক্টরি ট্রাই করবে ক্র্যাশ না করে
-    console.log("⚠️ /opt/render পাথে ফাইল পাওয়া যায়নি, কারেন্ট ডিরেক্টরি চেক করা হচ্ছে...");
-    admin.initializeApp({
-      credential: admin.credential.cert('./firebase-key.json'),
-      databaseURL: "https://apki-d2597-default-rtdb.firebaseio.com/" 
-    });
-  }
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccountPath),
+    databaseURL: "https://apki-d2597-default-rtdb.firebaseio.com/" 
+  });
+  console.log("🎉 Firebase সফলভাবে কানেক্ট হয়েছে!");
 } catch (error) {
   console.error("❌ Firebase ইনিশিয়ালাইজ করতে সমস্যা হয়েছে:", error.message);
 }
+
 
 const db = admin.database();
 
