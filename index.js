@@ -1,28 +1,36 @@
-const TelegramBot = require('node-telegram-bot-api');
+const TelegramBot = require('node-telegram-bot-api'); // বড় হাতের Const ছোট হাতের const করা হলো
 const express = require('express');
 const admin = require('firebase-admin');
 const crypto = require('crypto'); 
 const app = express();
-const path = require('path');
+const fs = require('fs'); // ফাইল চেক করার জন্য যুক্ত করা হলো
 
-// ১. ফায়ারবেস সেটআপ (Secret File থেকে ডাইনামিকালি লোড করা হচ্ছে)
+// ১. ফায়ারবেস সেটআপ 
+// Render-এ Secret File-এর নাম যদি 'firebase-key.json' হয়ে থাকে, তবে নিচের পাথটি একদম সঠিক।
+const serviceAccountPath = '/opt/render/project/src/firebase-key.json'; 
+
 try {
-  // Render-এ সিক্রেট ফাইলের পাথ সাধারণত /opt/render/project/src/ বা ডিরেক্টরি অনুযায়ী হয়।
-  // আপনি যদি ফাইলটির নাম 'firebase-key.json' দিয়ে থাকেন, তবে নিচের নামটি পরিবর্তন করে নিতে পারেন।
-  const serviceAccountPath = path.join(__dirname, 'firebase-key.json'); 
-  
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccountPath),
-    databaseURL: "https://apki-d2597-default-rtdb.firebaseio.com/" 
-  });
-  console.log("Firebase সফলভাবে কানেক্ট হয়েছে!");
+  if (fs.existsSync(serviceAccountPath)) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccountPath),
+      databaseURL: "https://apki-d2597-default-rtdb.firebaseio.com/" 
+    });
+    console.log("🎉 Firebase সফলভাবে কানেক্ট হয়েছে!");
+  } else {
+    // যদি ওই পাথে না পায়, তবে কারেন্ট ডিরেক্টরি ট্রাই করবে ক্র্যাশ না করে
+    console.log("⚠️ /opt/render পাথে ফাইল পাওয়া যায়নি, কারেন্ট ডিরেক্টরি চেক করা হচ্ছে...");
+    admin.initializeApp({
+      credential: admin.credential.cert('./firebase-key.json'),
+      databaseURL: "https://apki-d2597-default-rtdb.firebaseio.com/" 
+    });
+  }
 } catch (error) {
-  console.error("Firebase ইনিশিয়ালাইজ করতে সমস্যা হয়েছে:", error.message);
+  console.error("❌ Firebase ইনিশিয়ালাইজ করতে সমস্যা হয়েছে:", error.message);
 }
 
 const db = admin.database();
 
-// এক্সপ্রেস伺ভার (Render-এর জন্য)
+// এক্সপ্রেস সার্ভার (Render-এর জন্য)
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => {
     res.send('বটটি সফলভাবে ২৪ ঘণ্টা লাইভ আছে!');
