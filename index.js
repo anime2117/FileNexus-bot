@@ -3,29 +3,26 @@ const express = require('express');
 const admin = require('firebase-admin');
 const crypto = require('crypto'); 
 const app = express();
+const path = require('path');
 
-// ১. ফায়ারবেস সেটআপ
-const serviceAccount = {
-  "type": "service_account",
-  "project_id": "apki-d2597",
-  "private_key_id": "b1667ca1b05c308efefe305f3db94c55124e3c35",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-fbsvc@apki-d2597.iam.gserviceaccount.com",
-  "client_id": "117088486174654038483",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40apki-d2597.iam.gserviceaccount.com..."
-};
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://apki-d2597-default-rtdb.firebaseio.com/" 
-});
+// ১. ফায়ারবেস সেটআপ (Secret File থেকে ডাইনামিকালি লোড করা হচ্ছে)
+try {
+  // Render-এ সিক্রেট ফাইলের পাথ সাধারণত /opt/render/project/src/ বা ডিরেক্টরি অনুযায়ী হয়।
+  // আপনি যদি ফাইলটির নাম 'firebase-key.json' দিয়ে থাকেন, তবে নিচের নামটি পরিবর্তন করে নিতে পারেন।
+  const serviceAccountPath = path.join(__dirname, 'firebase-key.json'); 
+  
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccountPath),
+    databaseURL: "https://apki-d2597-default-rtdb.firebaseio.com/" 
+  });
+  console.log("Firebase সফলভাবে কানেক্ট হয়েছে!");
+} catch (error) {
+  console.error("Firebase ইনিশিয়ালাইজ করতে সমস্যা হয়েছে:", error.message);
+}
 
 const db = admin.database();
 
-// এক্সপ্রেস সার্ভার (Render-এর জন্য)
+// এক্সপ্রেস伺ভার (Render-এর জন্য)
 const PORT = process.env.PORT || 3000;
 app.get('/', (req, res) => {
     res.send('বটটি সফলভাবে ২৪ ঘণ্টা লাইভ আছে!');
@@ -38,8 +35,7 @@ app.listen(PORT, () => {
 const TOKEN = '8795629325:AAGEMGKSsglmHcUKjEzyty7N72n9MUeKoWk'; 
 const BOT_USERNAME = 'filenexus_bot'; 
 
-// ⚠️ এখানে আপনার নিজের টেলিগ্রাম অ্যাকাউন্ট আইডি বসান (যেমন: 12345678)
-// এই আইডি ছাড়া অন্য কেউ ফরোয়ার্ড বা ফাইল পাঠালে বট রিসিভ করবে না।
+// অ্যাডমিন আইডি
 const ADMIN_ID = 8273597769; 
 
 const bot = new TelegramBot(TOKEN, { polling: true });
@@ -52,7 +48,7 @@ bot.on('message', async (msg) => {
     // ব্যবহারকারী যদি কোনো ফাইল (ডকুমেন্ট, ফটো বা ভিডিও) পাঠায়
     if (msg.document || msg.photo || msg.video) {
         
-        // 🔒 চেক করা হচ্ছে যে ফাইলটি আপনি (অ্যাডমিন) পাঠিয়েছেন কিনা
+        // চেক করা হচ্ছে যে ফাইলটি আপনি (অ্যাডমিন) পাঠিয়েছেন কিনা
         if (userId !== ADMIN_ID) {
             return bot.sendMessage(chatId, "❌ দুঃখিত! আপনি এই বটের অ্যাডমিন নন। আপনি কোনো ফাইল আপলোড করতে পারবেন না।");
         }
